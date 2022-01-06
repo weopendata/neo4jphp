@@ -80,12 +80,17 @@ class Curl extends BaseTransport
 				break;
 		}
 
-		$ch = $this->getHandle();
+		// Using a local variable for curl makes it so that the file descriptors the streams of cURL use are properly closed after usage
+		// When making a large amount of requests to the Neo4J Client, it may cause a "too many open files" error, using a local variable fixes this.
+		$ch = curl_init();
+		
 		curl_setopt_array($ch, $options);
 
 		$response = curl_exec($ch);
 		$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+		
+		curl_close($ch);
 
 		if ($response === false) {
 			throw new Exception("Can't open connection to ".$url);
